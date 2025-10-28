@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Campanhas por Vendedor</title>
+  <style>
+    :root {
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      color: #1f2933;
+      background-color: #f5f7fa;
+    }
+
+    body {
+      margin: 0;
+      padding: 2rem;
+      display: flex;
+      justify-content: center;
+    }
+
+    main {
+      width: min(960px, 100%);
+      background-color: #ffffff;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
+      border-radius: 16px;
+      padding: 2.5rem;
+      box-sizing: border-box;
+    }
+
+    h1 {
+      margin-top: 0;
+      font-size: clamp(1.8rem, 4vw, 2.4rem);
+      color: #0f172a;
+    }
+
+    p.description {
+      margin-bottom: 2rem;
+      color: #52606d;
+      line-height: 1.6;
+    }
+
+    form {
+      display: grid;
+      gap: 1.5rem;
+    }
+
+    .field {
+      display: grid;
+      gap: 0.5rem;
+    }
+
+    label {
+      font-weight: 600;
+      color: #1f2933;
+    }
+
+    select,
+    input[type="number"],
+    input[type="range"] {
+      padding: 0.75rem 1rem;
+      border-radius: 10px;
+      border: 1px solid #cbd2d9;
+      font-size: 1rem;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    select:focus,
+    input[type="number"]:focus,
+    input[type="range"]:focus {
+      outline: none;
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
+    }
+
+    .range-display {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.9rem;
+      color: #64748b;
+    }
+
+    button {
+      justify-self: start;
+      padding: 0.9rem 1.8rem;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #2563eb, #7c3aed);
+      color: #ffffff;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 18px rgba(79, 70, 229, 0.35);
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 2.5rem;
+      overflow: hidden;
+      border-radius: 12px;
+    }
+
+    thead {
+      background-color: #eef2ff;
+    }
+
+    th,
+    td {
+      padding: 0.9rem 1.1rem;
+      text-align: left;
+      font-size: 0.95rem;
+    }
+
+    tbody tr:nth-child(even) {
+      background-color: #f8fafc;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 2rem;
+      color: #94a3b8;
+      font-size: 0.95rem;
+    }
+
+    @media (max-width: 640px) {
+      main {
+        padding: 1.75rem;
+      }
+
+      table,
+      thead,
+      tbody,
+      th,
+      td,
+      tr {
+        display: block;
+      }
+
+      thead {
+        display: none;
+      }
+
+      tbody tr {
+        margin-bottom: 1.5rem;
+        background-color: #f8fafc;
+        border-radius: 12px;
+        padding: 1rem;
+        box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+      }
+
+      tbody td {
+        padding: 0.5rem 0;
+      }
+
+      tbody td::before {
+        content: attr(data-label);
+        display: block;
+        font-weight: 600;
+        color: #475569;
+        margin-bottom: 0.25rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Cadastro de Delay por Vendedor</h1>
+    <p class="description">
+      Escolha o vendedor responsável pela campanha e defina o tempo de espera entre os disparos de mensagens. Cada cadastro ficará registrado abaixo para que você possa acompanhar os parâmetros definidos.
+    </p>
+    <form id="campaign-form">
+      <div class="field">
+        <label for="vendor">Vendedor</label>
+        <select id="vendor" required>
+          <option value="" disabled selected>Selecione um vendedor</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="delay">Delay entre mensagens (segundos)</label>
+        <input type="number" id="delay" name="delay" min="60" max="360" value="60" required />
+        <div class="range-display">
+          <span>Mínimo: 60s</span>
+          <span id="current-delay">60s</span>
+          <span>Máximo: 360s</span>
+        </div>
+        <input type="range" id="delay-slider" min="60" max="360" value="60" />
+      </div>
+      <button type="submit">Registrar campanha</button>
+    </form>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Vendedor</th>
+          <th>Delay (segundos)</th>
+          <th>Data de cadastro</th>
+        </tr>
+      </thead>
+      <tbody id="campaign-list">
+        <tr class="empty-state">
+          <td colspan="3">Nenhum registro até o momento.</td>
+        </tr>
+      </tbody>
+    </table>
+  </main>
+
+  <script>
+    const vendors = [
+      { id: "ana-souza", name: "Ana Souza" },
+      { id: "marcos-silva", name: "Marcos Silva" },
+      { id: "fernanda-lima", name: "Fernanda Lima" },
+      { id: "joao-pereira", name: "João Pereira" }
+    ];
+
+    const vendorSelect = document.getElementById("vendor");
+    const delayInput = document.getElementById("delay");
+    const delaySlider = document.getElementById("delay-slider");
+    const currentDelay = document.getElementById("current-delay");
+    const campaignForm = document.getElementById("campaign-form");
+    const campaignList = document.getElementById("campaign-list");
+
+    vendors.forEach((vendor) => {
+      const option = document.createElement("option");
+      option.value = vendor.id;
+      option.textContent = vendor.name;
+      vendorSelect.appendChild(option);
+    });
+
+    const syncDelayInputs = (value) => {
+      delayInput.value = value;
+      delaySlider.value = value;
+      currentDelay.textContent = `${value}s`;
+    };
+
+    delayInput.addEventListener("input", (event) => {
+      const value = Math.min(Math.max(Number(event.target.value), 60), 360);
+      syncDelayInputs(value);
+    });
+
+    delaySlider.addEventListener("input", (event) => {
+      syncDelayInputs(event.target.value);
+    });
+
+    const clearEmptyState = () => {
+      const emptyRow = campaignList.querySelector(".empty-state");
+      if (emptyRow) {
+        emptyRow.remove();
+      }
+    };
+
+    const addCampaignRow = (vendorName, delay) => {
+      const row = document.createElement("tr");
+
+      const vendorCell = document.createElement("td");
+      vendorCell.dataset.label = "Vendedor";
+      vendorCell.textContent = vendorName;
+
+      const delayCell = document.createElement("td");
+      delayCell.dataset.label = "Delay";
+      delayCell.textContent = `${delay} segundos`;
+
+      const dateCell = document.createElement("td");
+      dateCell.dataset.label = "Data";
+      const now = new Date();
+      dateCell.textContent = now.toLocaleString("pt-BR", {
+        dateStyle: "medium",
+        timeStyle: "short"
+      });
+
+      row.appendChild(vendorCell);
+      row.appendChild(delayCell);
+      row.appendChild(dateCell);
+      campaignList.appendChild(row);
+    };
+
+    campaignForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+
+      const selectedVendor = vendors.find((vendor) => vendor.id === vendorSelect.value);
+      const delay = Number(delayInput.value);
+
+      if (!selectedVendor) {
+        alert("Selecione um vendedor antes de registrar a campanha.");
+        return;
+      }
+
+      if (Number.isNaN(delay) || delay < 60 || delay > 360) {
+        alert("Informe um delay entre 60 e 360 segundos.");
+        return;
+      }
+
+      clearEmptyState();
+      addCampaignRow(selectedVendor.name, delay);
+      campaignForm.reset();
+      syncDelayInputs(60);
+      vendorSelect.focus();
+    });
+
+    syncDelayInputs(delayInput.value);
+  </script>
+</body>
+</html>
